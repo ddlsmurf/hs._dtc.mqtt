@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          path: root
+
+      - name: Download Hammerspoon
+        run: |
+          curl -L -o hammerspoon.zip https://github.com/Hammerspoon/hammerspoon/releases/download/1.0.0/Hammerspoon-1.0.0.zip
+          unzip -q hammerspoon.zip
+          ls -la
+
+      - name: Build
+        run: |
+          cd root
+          HS_APPLICATION="${PWD}/../" make all
+
+      # required for documentation
+      - name: Checkout Hammerspoon
+        uses: actions/checkout@v6
+        with:
+          repository: 'Hammerspoon/hammerspoon'
+          path: hs-code
+      - name: Build documentation
+        run: |
+          (cd hs-code ; pip install --user -r requirements.txt)
+          python ./hs-code/scripts/docs/bin/build_docs.py --json --markdown --templates ./hs-code/scripts/docs/templates/ --output_dir ./root --standalone ./root
+
+      - name: Package release
+        run: |
+          cd root
+          mkdir -p release/hs/_dtc/mqtt
+          cp internal.so release/hs/_dtc/mqtt/
+          cp init.lua dispatcher.lua reconnector.lua release/hs/_dtc/mqtt/
+          cp docs.json markdown/hs.* release/hs/_dtc/mqtt/ || true
+          cd release && tar -czf ../hs._dtc.mqtt.tar.gz *
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: release-${{ github.sha }}
+          name: Release ${{ github.sha }}
+          draft: false
+          prerelease: false
+          files: root/hs._dtc.mqtt.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

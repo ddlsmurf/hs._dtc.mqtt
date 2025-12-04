@@ -1,0 +1,8 @@
+*.so
+*.so.dSYM/
+*.o
+
+# MQTT-Client-Framework compiled objects
+deps/MQTT-Client-Framework/MQTTClient/MQTTClient/*.o
+
+docs.json
