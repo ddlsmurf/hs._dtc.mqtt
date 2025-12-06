@@ -47,7 +47,7 @@ jobs:
           mkdir -p release/hs/_dtc/mqtt
           cp internal.so release/hs/_dtc/mqtt/
           cp init.lua dispatcher.lua reconnector.lua release/hs/_dtc/mqtt/
-          cp docs.json markdown/hs.* release/hs/_dtc/mqtt/ || true
+          cp docs.json README.md markdown/hs.* release/hs/_dtc/mqtt/ || true
           cd release && tar -czf ../hs._dtc.mqtt.tar.gz *
 
       - name: Create Release
